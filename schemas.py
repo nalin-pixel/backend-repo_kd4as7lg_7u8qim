@@ -1,48 +1,48 @@
 """
-Database Schemas
+Database Schemas for Budgeting App
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model represents a MongoDB collection.
+Collection name is the lowercase of the class name.
 """
-
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Literal
+from datetime import date
 
-# Example schemas (replace with your own):
-
-class User(BaseModel):
+class Budget(BaseModel):
     """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
+    Monthly budget configuration
+    Collection: "budget"
     """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+    month: str = Field(..., description="YYYY-MM month key")
+    limit_amount: float = Field(..., ge=0, description="Monthly spending limit in currency units")
 
-class Product(BaseModel):
+class Transaction(BaseModel):
     """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
+    Expense transaction record
+    Collection: "transaction"
     """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+    date: date = Field(..., description="Transaction date")
+    amount: float = Field(..., description="Amount spent (positive value)")
+    merchant: str = Field(..., description="Merchant or payee")
+    category: Optional[str] = Field(None, description="Category if available")
+    source: Literal["gpay", "statement", "manual"] = Field("manual", description="Source of the transaction")
+    note: Optional[str] = Field(None, description="Optional note")
 
-# Add your own schemas here:
-# --------------------------------------------------
+class WishlistItem(BaseModel):
+    """
+    Wishlist item the user plans to buy
+    Collection: "wishlistitem"
+    """
+    name: str = Field(..., description="Item name")
+    estimated_price: float = Field(..., ge=0, description="Estimated price")
+    priority: Literal["High", "Medium", "Low"] = Field("Medium", description="Priority")
+    deadline_month: Optional[str] = Field(None, description="Optional YYYY-MM month to target purchase")
+    purchased: bool = Field(False, description="Whether this item has been purchased")
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Setting(BaseModel):
+    """
+    App-level settings (placeholder)
+    Collection: "setting"
+    """
+    key: str
+    value: str
